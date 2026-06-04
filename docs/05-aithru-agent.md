@@ -10,6 +10,19 @@ It should be built on top of `aithru-core`, not inside it.
 Aithru Agent = optional Agent harness that uses core workflow, trace, approval, and tool contracts
 ```
 
+## Core boundary
+
+The most important boundary is:
+
+```txt
+aithru-core owns formal workflows.
+aithru-agent owns intelligent execution inside bounded tasks or nodes.
+```
+
+`aithru-agent` must not become a second workflow system.
+
+It can run an internal task plan, but that plan is not a `WorkflowSpec` and should not replace the core workflow graph.
+
 ## Relationship to core
 
 ```txt
@@ -31,6 +44,19 @@ aithru-core does not depend on aithru-agent.
 
 `aithru-agent` runs agentic work inside those boundaries.
 
+## Formal workflow vs agent plan
+
+| Concept | Owner | Meaning |
+| --- | --- | --- |
+| `WorkflowSpec` | `aithru-core` | Reusable, user-editable, versioned workflow graph. |
+| Workflow node/edge | `aithru-core` | Formal execution structure and branch semantics. |
+| `agent.*` node | `aithru-agent` package, executed by core runtime | Intelligent behavior inside a workflow node. |
+| `AgentTask` | `aithru-agent` | One intelligent task. |
+| `AgentPlan` | `aithru-agent` | Dynamic, task-local plan for one agent run. |
+| `AgentStep` | `aithru-agent` | Internal execution step inside one agent task. |
+
+A saved workflow belongs to core. A temporary agent plan belongs to agent.
+
 ## Recommended first shape
 
 The first useful shape is a plan/run/review harness:
@@ -45,7 +71,7 @@ Task
   -> rerun when needed
 ```
 
-This maps well to developer workflows and to later product workflows.
+This is an internal agent execution pattern, not a replacement for the formal workflow graph.
 
 ## Agent as a bounded workflow node
 
@@ -55,12 +81,49 @@ Example node families:
 
 | Node | Purpose |
 | --- | --- |
-| `agent.plan` | Produce a structured plan. |
+| `agent.classify` | Make a short structured decision for downstream workflow branching. |
+| `agent.plan` | Produce a structured task-local agent plan. |
 | `agent.execute` | Execute bounded steps using approved tools. |
 | `agent.review` | Review outputs and decide pass/fail or rerun. |
+| `agent.deepResearch` | Run a bounded deep research task and produce structured artifacts. |
 | `agent.task` | Run a compact end-to-end agent task for simple cases. |
 
 These nodes should emit normal Aithru execution events and use core tool contracts.
+
+## Core branching, agent judgment
+
+Agent nodes may make intelligent judgments, but core nodes should own formal branch execution.
+
+Recommended pattern:
+
+```txt
+agent.classify
+  -> core.if
+  -> branch A / branch B
+```
+
+For example, `agent.classify` can output:
+
+```json
+{
+  "route": "deep_research",
+  "confidence": 0.87,
+  "reason": "The task requires multi-source analysis."
+}
+```
+
+Then `core.if` or another deterministic workflow node performs the formal route selection.
+
+## Deep research
+
+Deep research belongs to `aithru-agent` as an intelligent execution pattern.
+
+It may appear as:
+
+1. a direct `agentRuntime.runTask(...)` call; or
+2. a workflow node such as `agent.deepResearch` inside a formal core workflow.
+
+The reusable workflow that contains a deep research node still belongs to `aithru-core`.
 
 ## Tool-use rules
 
@@ -163,6 +226,8 @@ For the first version, prefer a small deterministic test adapter plus one real p
 ## Non-goals for the first version
 
 - No visual workflow builder.
+- No formal `WorkflowSpec` replacement.
+- No workflow scheduler replacement.
 - No server worker pool.
 - No durable distributed queue.
 - No MCP transport management unless delegated to a separate MCP package.
