@@ -1,0 +1,118 @@
+# Runtime, Trace, Approval, Tooling
+
+This document summarizes the execution model shared by current `aithru-core` and future optional modules.
+
+## Runtime model
+
+The current core runtime is deterministic DAG execution.
+
+```txt
+WorkflowSpec
+  -> schema validation
+  -> graph validation
+  -> topological scheduling
+  -> node execution
+  -> branch decisions
+  -> terminal outputs
+  -> completed / paused / failed result
+```
+
+`@aithru/runtime-local` is the current local single-process runtime adapter. It schedules validated workflows and delegates concrete actions to injected tool executors.
+
+## Event and trace model
+
+Aithru runs should be observable through structured events.
+
+Current core concepts include:
+
+- execution events;
+- run records;
+- event stores;
+- trace stores;
+- local file traces;
+- trace replay helpers;
+- redaction policy.
+
+The local file trace shape is:
+
+```txt
+.aithru/
+  runs/
+    <runId>/
+      run.json
+      events.jsonl
+```
+
+## Redaction model
+
+Runtime return values may remain full fidelity for the immediate caller, while persisted trace records can be redacted before writing.
+
+This allows local or server products to keep useful debugging data without leaking configured sensitive paths into long-lived trace storage.
+
+Future modules should reuse the same redaction policy concepts instead of creating unrelated trace sanitization systems.
+
+## Pause and approval model
+
+Human approval is represented as a structured pause/resume flow.
+
+```txt
+node returns pause
+  -> runtime emits approval request event
+  -> runtime emits run paused event
+  -> caller receives paused result
+  -> caller resumes with approval response
+  -> runtime continues or rejects
+```
+
+Current `aithru-core` supports same-process local resume. Durable cross-process resume belongs to future desktop/server runtime composition.
+
+## Tool execution model
+
+Nodes do not execute concrete external actions directly. They call tools through runtime contracts.
+
+```txt
+NodeExecutionContext.callTool
+  -> ToolPermissionPolicy
+  -> tool lifecycle events
+  -> ToolExecutor
+  -> ToolExecutionResult or ToolExecutionError
+```
+
+This model is important because it gives every product surface one consistent place to enforce:
+
+- allow/deny policy;
+- risk level checks;
+- approval before execution;
+- secret access events;
+- redaction;
+- audit traces;
+- runtime-specific tool execution.
+
+## Why Agent must use the same tool model
+
+Agent code can produce dynamic tool calls, but those calls should still go through the same tool execution pipeline.
+
+Required direction:
+
+```txt
+Agent step
+  -> core tool request
+  -> permission policy
+  -> approval if needed
+  -> executor
+  -> trace
+```
+
+This keeps deterministic workflows and Agent workflows compatible with the same inspection, approval, and security surfaces.
+
+## Future runtime extensions
+
+| Extension | Owner |
+| --- | --- |
+| Durable run store | `aithru-server` or product-specific adapter |
+| Postgres-backed trace store | `aithru-server` |
+| Local encrypted credential store | `aithru-desktop` |
+| Vault/KMS integration | `aithru-server` |
+| Browser run timeline UI | `aithru-web` or future `aithru-ui` |
+| Agent internal event stream | `aithru-agent`, mapped into core trace concepts |
+| MCP transport lifecycle | `aithru-mcp` |
