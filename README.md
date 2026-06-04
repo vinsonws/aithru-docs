@@ -8,7 +8,7 @@ Aithru is a local-first and enterprise-ready AI WorkflowOS. This repository keep
 
 | Repository | Current role | Boundary |
 | --- | --- | --- |
-| `vinsonws/aithru-core` | Deterministic workflow kernel, local runtime adapter, node SDK, primitive nodes, human approval, HTTP node and tool executor, trace, redaction, pause/resume, and generic tool contracts. | Does not include real Agent runtime, MCP SDK, UI, server runtime, database/queue adapters, or LLM providers by default. |
+| `vinsonws/aithru-core` | Deterministic workflow kernel, local runtime adapter, node SDK, primitive nodes, human approval, HTTP node and tool executor, trace, redaction, pause/resume, and generic tool contracts. | Owns formal WorkflowSpec and workflow execution semantics. Does not include real Agent runtime, MCP SDK, UI, server runtime, database/queue adapters, or LLM providers by default. |
 | `vinsonws/aithru-web` | Browser-safe React/Vite workflow authoring and inspection surface for Aithru Core workflows. | Edits and validates `WorkflowSpec`; browser run panel is simulation only. Real execution belongs to a future desktop bridge or server runtime. |
 | `vinsonws/aithru-docs` | Ecosystem-level architecture, ADRs, specs, roadmaps, and implementation prompts. | Does not replace package READMEs or generated API docs; it explains cross-repo design decisions and long-term direction. |
 
@@ -16,6 +16,13 @@ Core principle:
 
 ```txt
 Workflow is deterministic. Integrations are nodes or tools.
+```
+
+Core/Agent boundary:
+
+```txt
+aithru-core owns formal workflows.
+aithru-agent owns intelligent execution inside bounded tasks or nodes.
 ```
 
 ## Start here
@@ -29,12 +36,14 @@ Workflow is deterministic. Integrations are nodes or tools.
 7. [Runtime, Trace, Approval, Tooling](./docs/06-runtime-trace-approval-tooling.md)
 8. [Roadmap](./docs/07-roadmap.md)
 9. [Development Workflow](./docs/08-development-workflow.md)
+10. [Core and Agent Boundary](./docs/09-core-agent-boundary.md)
 
 Architecture decisions:
 
 - [ADR-0001: Keep docs as the ecosystem source of truth](./adr/ADR-0001-docs-as-source-of-truth.md)
 - [ADR-0002: Keep core, web, and agent boundaries explicit](./adr/ADR-0002-core-agent-web-boundaries.md)
 - [ADR-0003: Browser UI does not execute the real runtime](./adr/ADR-0003-browser-ui-does-not-execute-runtime.md)
+- [ADR-0004: Core owns workflows, Agent owns intelligent execution](./adr/ADR-0004-core-owns-workflows-agent-owns-intelligence.md)
 
 Reusable implementation prompt:
 
