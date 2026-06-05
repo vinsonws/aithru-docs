@@ -15,7 +15,7 @@ Core does not depend on product shells or integrations.
 | --- | --- | --- |
 | `aithru-core` | v0.15.0-rc.0 baseline | Deterministic workflow kernel, local runtime adapter, node SDK, node packages, tool executor contracts, trace, redaction, pause/resume, and HTTP example executor. |
 | `aithru-web` | browser-safe editor / bridge client surface | WorkflowSpec editor, node palette, validation panel, graph editing, draft persistence, Bridge Mock, HTTP Bridge Client, and trace viewer. |
-| `aithru-personal-bridge` | planned personal execution host | Trusted single-user/private execution bridge for localhost and personal-server deployments. It implements the Execution Bridge API consumed by `aithru-web`. |
+| `aithru-personal-bridge` | planned personal execution host | Trusted personal execution host for Aithru-Web; runs LocalRuntime on localhost or a private personal server such as a Mac mini, DGX-like workstation, NAS, home server, or private small server. |
 | `aithru-docs` | design hub | Cross-repository architecture, ADRs, specs, and roadmap. |
 
 ## Future modules
@@ -25,7 +25,7 @@ Core does not depend on product shells or integrations.
 | `aithru-agent` | Optional Agent runtime and harness layer. | `aithru-core`; optional model, MCP, and tool packages. |
 | `aithru-mcp` | Optional MCP integration package. | `aithru-core`; optional MCP SDK/transports. |
 | `aithru-ui` | Reusable workflow designer and trace viewer library. | `aithru-core` browser-safe types and metadata. |
-| `aithru-desktop` | Personal Edition local-first product shell; may embed or package `aithru-personal-bridge`. | core, UI, stdlib, personal bridge, optional Agent/MCP packages. |
+| `aithru-desktop` | Personal Edition local-first product shell; may embed, manage, package, or later replace `aithru-personal-bridge`. | core, UI, stdlib, personal bridge, optional Agent/MCP packages. |
 | `aithru-server` | Business/Enterprise product shell. | core, UI, stdlib, optional Agent/MCP packages, database and worker infrastructure. |
 
 ## Deployment modes
@@ -52,7 +52,7 @@ aithru-core
 
 `aithru-web` currently imports only browser-safe package entry points from the core workspace. It intentionally avoids `@aithru/runtime-local`, `@aithru/tool-http`, and file-system helpers.
 
-`aithru-personal-bridge` is allowed to import Node/runtime-side packages such as `@aithru/runtime-local`, tool executors, trace stores, and file/artifact helpers because it runs in a trusted personal execution host rather than in the browser.
+`aithru-personal-bridge` is allowed to import Node/runtime-side packages such as `@aithru/runtime-local`, `@aithru/tool-http`, `@aithru/stdlib/file`, tool executors, trace stores, and file/artifact helpers because it runs in a trusted personal execution host rather than in the browser.
 
 `aithru-agent` should be designed as an optional runtime/harness layer. It should reuse core contracts instead of introducing a parallel execution model.
 
@@ -64,12 +64,12 @@ aithru-core
 | Node and runtime contracts | `aithru-core` / `@aithru/runtime-core` |
 | Local single-process DAG execution | `aithru-core` / `@aithru/runtime-local` |
 | Browser editing and validation | `aithru-web` today; future shared `aithru-ui` |
-| Personal execution bridge | `aithru-personal-bridge` |
+| Personal/local execution host | `aithru-personal-bridge` |
 | Personal trace/artifact storage | `aithru-personal-bridge` |
-| Desktop-local product shell | future `aithru-desktop`, possibly embedding or packaging `aithru-personal-bridge` |
+| Desktop-local execution bridge and product shell | future `aithru-desktop`, possibly embedding, managing, packaging, or later replacing `aithru-personal-bridge` |
 | Real Agent loop and model adapters | future `aithru-agent` |
 | MCP transport and tool integration | future `aithru-mcp` |
-| Durable workers and team execution | future `aithru-server` |
+| Durable team execution | future `aithru-server` |
 
 ## Composition rule
 
