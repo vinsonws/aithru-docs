@@ -4,7 +4,7 @@ This roadmap is organized around module boundaries rather than a single monolith
 
 ## Phase 0: Current baseline
 
-Status: mostly done in `aithru-core` and `aithru-web`.
+Status: implemented across `aithru-core`, `aithru-web`, and `aithru-agent`; `aithru-personal-bridge` remains the next execution-host step.
 
 ### `aithru-core`
 
@@ -29,6 +29,44 @@ Status: mostly done in `aithru-core` and `aithru-web`.
 - Bridge Mock.
 - HTTP Bridge Client.
 - Trace viewer foundation.
+
+### `aithru-agent`
+
+- `@aithru/agent-core`:
+  - Agent contracts.
+  - `AgentEvent`.
+  - `AgentTraceEvent` taxonomy.
+  - `agentTraceEventFromAgentEvent(...)`.
+  - research report types.
+- `@aithru/agent-runtime`:
+  - `ClassifyEngine`.
+  - `PlanRunReviewEngine`.
+  - `DeepResearchEngine` V0.
+  - `AgentRuntime.run(...)`.
+  - `AgentRuntime.runTask(...)`.
+  - runtime failure semantics.
+- `@aithru/agent-model-test`:
+  - deterministic scripted model adapter.
+- `@aithru/agent-model-openai-compatible`:
+  - OpenAI-compatible HTTP model adapter.
+  - no provider SDK.
+  - does not execute tools.
+- `@aithru/node-agent`:
+  - `agent.classify`.
+  - `agent.task`.
+  - `agent.deepResearch`.
+  - model resolution injection.
+  - tool bridge to core `ctx.callTool`.
+  - AgentTraceEvent bridge through core `log.info` events.
+- Examples:
+  - standalone classify.
+  - standalone plan-run-review.
+  - standalone deep research.
+  - node-agent-basic.
+  - workflow-node-agent.
+  - workflow-node-agent-deep-research.
+  - optional OpenAI-compatible classify example.
+- Bounded agent execution only; `AgentPlan` is not `WorkflowSpec`.
 
 ## Phase 1: Documentation source of truth
 
@@ -92,22 +130,32 @@ Possible deliverables:
 - ApprovalCard UI.
 - Browser-safe import rules.
 
-## Phase 4: Aithru Agent MVP
+## Phase 4: Aithru Web Agent trace viewer
 
-Goal: build the first optional Agent runtime/harness on top of core contracts.
+Goal: add first-class web UX for inspecting Agent execution without moving Agent runtime ownership into `aithru-web`.
 
-Suggested MVP:
+Suggested deliverables:
 
-- Agent contracts package.
-- Test/scripted model adapter.
-- One real model adapter.
-- Plan/run/review runtime.
-- Agent workflow node definitions.
-- Tool-use path through core `callTool` and `ToolPermissionPolicy`.
-- Agent trace events mapped to Aithru run trace concepts.
-- Example workflow and programmatic runner.
+- Agent trace event timeline in `aithru-web`.
+- Agent run detail panel.
+- Mapping from `AgentTraceEvent` to UI-friendly views.
+- Example fixtures for standalone and workflow-node Agent runs.
+- Browser-safe trace inspection only; no runtime execution.
 
-## Phase 5: MCP optional integration
+## Phase 5: Richer Deep Research tools
+
+Goal: extend `DeepResearchEngine` with additional research affordances while keeping Agent execution bounded inside `aithru-agent`.
+
+Suggested deliverables:
+
+- More source and citation handling inside the Agent runtime.
+- Research tool coordination that still goes through `AgentHost.callTool`.
+- Browser/web research tools only if explicitly added as optional integrations later.
+- Durable persistence remains out of scope.
+- Memory remains out of scope.
+- UI/chat remains out of scope.
+
+## Phase 6: MCP optional integration
 
 Goal: reintroduce MCP as an optional package, not as a core dependency.
 
@@ -118,8 +166,9 @@ Suggested deliverables:
 - stdio/http/sse client adapters as appropriate.
 - Permission and approval tests.
 - Trace compatibility tests.
+- Optional package wiring only; MCP is not implemented yet.
 
-## Phase 6: Desktop Personal Edition
+## Phase 7: Desktop Personal Edition
 
 Goal: create the local-first product shell.
 
@@ -133,7 +182,7 @@ Suggested deliverables:
 - Plugin installation model.
 - Templates.
 
-## Phase 7: Server Business Edition
+## Phase 8: Server Business Edition
 
 Goal: create team-grade execution and governance.
 
