@@ -15,7 +15,8 @@ Aithru has three pieces that should stay separate:
 ```txt
 aithru-web
   browser authoring, validation, trace display, approval UI
-\NICALLithru-core
+
+aithru-core
   WorkflowSpec, LocalRuntime, node/runtime/tool contracts
 
 aithru-personal-bridge
