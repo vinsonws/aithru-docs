@@ -120,7 +120,8 @@ This keeps deterministic workflows and Agent workflows compatible with the same 
 | Personal execution host | `aithru-personal-bridge` |
 | Personal trace/artifact storage | `aithru-personal-bridge` |
 | Personal-server token/CORS/network policy | `aithru-personal-bridge` |
-| Desktop product embedding and packaging | future `aithru-desktop` |
+| Desktop embedding and packaging | future `aithru-desktop` |
+| Durable team execution | future `aithru-server` |
 | Durable run store | `aithru-server` or product-specific adapter |
 | Postgres-backed trace store | `aithru-server` |
 | Local encrypted credential UX | future `aithru-desktop`; execution-side secret access in `aithru-personal-bridge` |
