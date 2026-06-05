@@ -18,7 +18,7 @@ Current rule:
 
 ```txt
 aithru-web edits and validates WorkflowSpec.
-A desktop bridge or server runtime executes WorkflowSpec.
+aithru-personal-bridge or aithru-server executes WorkflowSpec.
 ```
 
 The current run panel may simulate execution status for local development, but it should not be treated as authoritative runtime behavior.
@@ -29,7 +29,7 @@ Positive:
 
 - Browser bundle stays safe and simple.
 - Node-only runtime code does not leak into the UI layer.
-- Future desktop and server products can share the same UI components while owning execution.
+- `aithru-personal-bridge`, future desktop, and future server products can share the same UI components while owning execution.
 - Tool permission, secrets, approval, and durable traces remain runtime-owned concerns.
 
 Tradeoffs:
@@ -39,7 +39,7 @@ Tradeoffs:
 
 ## Future integration path
 
-A future desktop or server shell may expose:
+`aithru-personal-bridge`, a future desktop shell, or a future server shell may expose:
 
 - run workflow;
 - resume paused run;
