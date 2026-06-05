@@ -2,13 +2,14 @@
 
 `aithru-docs` is the design source of truth for the Aithru ecosystem.
 
-Aithru is a local-first and enterprise-ready AI WorkflowOS. This repository keeps the product vision, architecture boundaries, module ownership, roadmap, and architecture decisions that guide implementation across `aithru-core`, `aithru-web`, `aithru-personal-bridge`, and future integration packages.
+Aithru is a local-first and enterprise-ready AI WorkflowOS. This repository keeps the product vision, architecture boundaries, module ownership, roadmap, and architecture decisions that guide implementation across `aithru-core`, `aithru-web`, `aithru-agent`, `aithru-personal-bridge`, and future integration packages.
 
 ## Current baseline
 
 | Repository | Current role | Boundary |
 | --- | --- | --- |
-| `vinsonws/aithru-core` | Deterministic workflow kernel, local runtime adapter, node SDK, primitive nodes, human approval, HTTP node and tool executor, trace, redaction, pause/resume, and generic tool contracts. | Owns formal WorkflowSpec and workflow execution semantics. Does not include real Agent runtime, MCP SDK, UI, server runtime, database/queue adapters, or LLM providers by default. |
+| `vinsonws/aithru-core` | Deterministic workflow kernel, local runtime adapter, node SDK, primitive nodes, human approval, HTTP node and tool executor, trace, redaction, pause/resume, and generic tool contracts. | Owns formal WorkflowSpec and workflow execution semantics. Does not include Agent runtime, MCP SDK, UI, server runtime, database/queue adapters, or LLM providers by default. |
+| `vinsonws/aithru-agent` | Intelligent execution layer with Agent contracts, model adapters, classify/plan-run-review/deep-research engines, AgentTraceEvent taxonomy, and `@aithru/node-agent` workflow nodes. | Owns intelligent execution inside bounded tasks or nodes. Does not own WorkflowSpec, workflow graph semantics, core scheduler behavior, or tool permission policy. |
 | `vinsonws/aithru-web` | Browser-safe React/Vite workflow authoring and inspection surface for Aithru Core workflows. | Edits and validates `WorkflowSpec`; browser run panel is simulation/inspection only. Real execution belongs to `aithru-personal-bridge` or future `aithru-server`. |
 | `vinsonws/aithru-personal-bridge` | Trusted personal execution host for Aithru-Web; runs LocalRuntime on localhost or a private personal server. | Single-user/private by default. Owns real workflow execution, local traces/artifacts, local secrets/config, tool executors, and approval resume; not an enterprise server. |
 | `vinsonws/aithru-docs` | Ecosystem-level architecture, ADRs, specs, roadmaps, and implementation prompts. | Does not replace package READMEs or generated API docs; it explains cross-repo design decisions and long-term direction. |
@@ -54,6 +55,7 @@ Architecture decisions:
 - [ADR-0003: Browser UI does not execute the real runtime](./adr/ADR-0003-browser-ui-does-not-execute-runtime.md)
 - [ADR-0004: Core owns workflows, Agent owns intelligent execution](./adr/ADR-0004-core-owns-workflows-agent-owns-intelligence.md)
 - [ADR-0005: Introduce aithru-personal-bridge as the personal execution host](./adr/ADR-0005-aithru-personal-bridge.md)
+- [ADR-0006: Agent engines may be exposed as workflow nodes](./adr/ADR-0006-agent-engines-as-workflow-nodes.md)
 
 Reusable implementation prompt:
 
