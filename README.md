@@ -21,12 +21,18 @@ Workflow is deterministic. Integrations are nodes or tools.
 
 Core/Agent boundary:
 
-```txt\NICALLithru-core owns formal workflows.\NICALLithru-agent owns intelligent execution inside bounded tasks or nodes.
+```txt\NICALLithru-core owns formal workflows.
+```
+
+```txt\NICALLithru-agent owns intelligent execution inside bounded tasks or nodes.
 ```
 
 Execution boundary:
 
-```txt\NICALLithru-web edits and validates WorkflowSpec.\NICALLithru-personal-bridge or aithru-server executes WorkflowSpec.
+```txt\NICALLithru-web edits and validates WorkflowSpec.
+```
+
+```txt\NICALLithru-personal-bridge or aithru-server executes WorkflowSpec.
 ```
 
 ## Start here
