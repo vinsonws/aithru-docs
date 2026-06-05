@@ -1,48 +1,37 @@
 # Aithru Agent
 
-`aithru-agent` is the proposed optional Agent runtime and harness layer for the Aithru ecosystem.
+`aithru-agent` is the intelligent execution layer of the Aithru ecosystem.
 
-It should be built on top of `aithru-core`, not inside it.
+It is built on top of `aithru-core` public contracts where workflow integration is needed, but it must not become a second workflow system.
 
 ## One-line definition
 
 ```txt
-Aithru Agent = optional Agent harness that uses core workflow, trace, approval, and tool contracts
+Aithru Agent = intelligent execution inside bounded tasks or workflow nodes
 ```
 
 ## Core boundary
-
-The most important boundary is:
 
 ```txt
 aithru-core owns formal workflows.
 aithru-agent owns intelligent execution inside bounded tasks or nodes.
 ```
 
-`aithru-agent` must not become a second workflow system.
+`aithru-agent` does not own `WorkflowSpec`, workflow graph semantics, branch semantics, workflow persistence, or core scheduling.
 
-It can run an internal task plan, but that plan is not a `WorkflowSpec` and should not replace the core workflow graph.
+It can run an internal task-local `AgentPlan`, but that plan is not a `WorkflowSpec` and should not replace the core workflow graph.
 
-## Relationship to core
+## Current implemented baseline
 
-```txt
-aithru-agent depends on aithru-core.
-aithru-core does not depend on aithru-agent.
-```
+| Package | Implemented role |
+| --- | --- |
+| `@aithru/agent-core` | Agent contracts, `AgentTask`, `AgentPlan`, `AgentEvent`, `AgentModelAdapter`, `AgentHost`, research report types, and `AgentTraceEvent` taxonomy. |
+| `@aithru/agent-runtime` | `ClassifyEngine`, `PlanRunReviewEngine`, `DeepResearchEngine`, `AgentRuntime.run(...)`, `AgentRuntime.runTask(...)`, event streaming, and failure semantics. |
+| `@aithru/agent-model-test` | Deterministic scripted model adapter and static structured/final helpers for tests and examples. |
+| `@aithru/agent-model-openai-compatible` | OpenAI-compatible HTTP model adapter implemented with `fetch`, without provider SDKs. It emits model events and does not execute tools. |
+| `@aithru/node-agent` | Workflow `NodeDefinition` factories for `agent.classify`, `agent.task`, and `agent.deepResearch`; bridges Agent tool calls to core `ctx.callTool`. |
 
-`aithru-core` defines the shared world:
-
-- WorkflowSpec
-- NodeDefinition
-- runtime contracts
-- event contracts
-- trace contracts
-- pause/resume contracts
-- redaction policy
-- generic tool execution contracts
-- tool permission contracts
-
-`aithru-agent` runs agentic work inside those boundaries.
+Implemented examples include standalone classify, standalone plan/run/review, standalone deep research, direct node-agent execution, LocalRuntime workflow execution with `agent.classify`, LocalRuntime workflow execution with `agent.deepResearch`, and an opt-in OpenAI-compatible classify example that safely skips when env vars are missing.
 
 ## Formal workflow vs agent plan
 
@@ -50,185 +39,97 @@ aithru-core does not depend on aithru-agent.
 | --- | --- | --- |
 | `WorkflowSpec` | `aithru-core` | Reusable, user-editable, versioned workflow graph. |
 | Workflow node/edge | `aithru-core` | Formal execution structure and branch semantics. |
-| `agent.*` node | `aithru-agent` package, executed by core runtime | Intelligent behavior inside a workflow node. |
+| `agent.*` node | `@aithru/node-agent`, executed by core runtime | Intelligent behavior inside a workflow node. |
 | `AgentTask` | `aithru-agent` | One intelligent task. |
 | `AgentPlan` | `aithru-agent` | Dynamic, task-local plan for one agent run. |
-| `AgentStep` | `aithru-agent` | Internal execution step inside one agent task. |
 
 A saved workflow belongs to core. A temporary agent plan belongs to agent.
 
-## Recommended first shape
+## Runtime engines
 
-The first useful shape is a plan/run/review harness:
+`@aithru/agent-runtime` currently provides three default engines:
 
-```txt
-Task
-  -> planner
-  -> executor
-  -> tool calls through core contracts
-  -> artifacts
-  -> reviewer
-  -> rerun when needed
-```
-
-This is an internal agent execution pattern, not a replacement for the formal workflow graph.
-
-## Agent as a bounded workflow node
-
-The safest integration model is to expose Agent behavior as one or more bounded workflow nodes.
-
-Example node families:
-
-| Node | Purpose |
+| Engine | Purpose |
 | --- | --- |
-| `agent.classify` | Make a short structured decision for downstream workflow branching. |
-| `agent.plan` | Produce a structured task-local agent plan. |
-| `agent.execute` | Execute bounded steps using approved tools. |
-| `agent.review` | Review outputs and decide pass/fail or rerun. |
-| `agent.deepResearch` | Run a bounded deep research task and produce structured artifacts. |
-| `agent.task` | Run a compact end-to-end agent task for simple cases. |
+| `classify` | Short structured judgment, such as route/confidence/reason. |
+| `plan-run-review` | Bounded task execution with plan, steps, optional tool calls, artifacts, and review. |
+| `deep-research` | Bounded Deep Research V0 with task-local research planning, host-owned tool calls, structured findings/sources, report artifact, and optional review. |
 
-These nodes should emit normal Aithru execution events and use core tool contracts.
+All engines emit `AgentEvent` values. `AgentRuntime.run(...)` returns the full event stream; every event is also sent to `AgentHost.emit(event)` in the same order. `AgentRuntime.runTask(...)` consumes the stream and returns the final `AgentTaskOutput`, or throws `AgentTaskFailedError` if the stream contains `agent.task.failed`.
 
-## Core branching, agent judgment
+## Deep Research V0
 
-Agent nodes may make intelligent judgments, but core nodes should own formal branch execution.
+Deep Research V0 belongs to `aithru-agent` as an intelligent execution pattern.
 
-Recommended pattern:
+It can be used in two ways:
 
-```txt
-agent.classify
-  -> core.if
-  -> branch A / branch B
-```
+1. As a direct runtime task through `AgentRuntime.runTask("deep-research", ...)`.
+2. As a formal workflow node through `agent.deepResearch` inside a core `WorkflowSpec`.
 
-For example, `agent.classify` can output:
+Deep Research V0 is bounded by normal run options such as `maxSteps` and `timeoutMs`, plus research-specific options such as `maxSources` and `maxSearchQueries`.
 
-```json
-{
-  "route": "deep_research",
-  "confidence": 0.87,
-  "reason": "The task requires multi-source analysis."
-}
-```
+It produces `AgentResearchReport` data with sources, findings, limitations, metadata, and a `report` artifact.
 
-Then `core.if` or another deterministic workflow node performs the formal route selection.
+It does not include real retrieval connectors or product UI by default. Hosts may provide fake local tools, provider-backed tools, or core workflow tool bridges, but the engine itself never executes tools directly.
 
-## Deep research
+## Agent as bounded workflow nodes
 
-Deep research belongs to `aithru-agent` as an intelligent execution pattern.
+`@aithru/node-agent` exposes current Agent engines as workflow nodes:
 
-It may appear as:
+| Node | Runtime engine | Purpose |
+| --- | --- | --- |
+| `agent.classify` | `classify` | Make a short structured decision for downstream deterministic branching. |
+| `agent.task` | `plan-run-review` by default, configurable engine | Run a compact end-to-end intelligent task. |
+| `agent.deepResearch` | `deep-research` | Run bounded Deep Research V0 and return report artifacts/metadata. |
 
-1. a direct `agentRuntime.runTask(...)` call; or
-2. a workflow node such as `agent.deepResearch` inside a formal core workflow.
+These nodes are formal workflow nodes, but they do not own workflow semantics. Aithru Core still owns graph execution, scheduling, branch semantics, workflow validation, and workflow persistence.
 
-The reusable workflow that contains a deep research node still belongs to `aithru-core`.
+## Tool-use rule
 
-## Tool-use rules
-
-Agent code must not directly bypass the runtime tool layer.
-
-Required rule:
+Agent code must not bypass the runtime tool layer.
 
 ```txt
-Agent tool use -> NodeExecutionContext.callTool -> ToolPermissionPolicy -> ToolExecutor -> trace events
+Agent model event
+  -> AgentRuntime
+  -> AgentHost.callTool
+  -> @aithru/node-agent bridge
+  -> NodeExecutionContext.callTool
+  -> ToolPermissionPolicy
+  -> ToolExecutor
+  -> trace events
 ```
 
-This keeps Agent behavior compatible with:
+This keeps Agent behavior compatible with permission policy, approval gates, trace recording, redaction, replay/debugging, and future personal/server execution surfaces.
 
-- permission policy;
-- approval gates;
-- trace recording;
-- redaction;
-- replay/debugging;
-- future desktop/server execution surfaces.
+## Model adapters
 
-## Model adapter layer
+`aithru-agent` is provider-neutral. It depends on `AgentModelAdapter`, not provider-specific runtime concepts.
 
-`aithru-agent` should not bind itself to one provider.
+Implemented adapters:
 
-Suggested adapter shape:
-
-```ts
-interface AgentModelAdapter {
-  generate(input: AgentModelInput): AsyncIterable<AgentModelEvent>;
-}
-```
-
-The event stream should allow future adapters to represent:
-
-- text deltas;
-- structured output;
-- tool-call proposals;
-- tool-call arguments;
-- reasoning metadata when available;
-- final result;
-- model/provider errors.
-
-Potential adapters:
-
-- OpenAI-compatible APIs;
-- Claude;
-- DeepSeek;
-- Qwen;
-- local vLLM;
-- test/scripted adapter.
-
-## Runtime constraints
-
-Every agent run should support bounded execution:
-
-| Constraint | Purpose |
+| Package | Role |
 | --- | --- |
-| `maxSteps` | Prevent unbounded loops. |
-| `timeoutMs` | Bound wall-clock runtime. |
-| `allowedTools` | Restrict tools by task or node. |
-| `approvalPolicy` | Pause before risky work. |
-| `redactionPolicy` | Protect persisted traces. |
-| `budget` | Optional token/cost boundary. |
+| `@aithru/agent-model-test` | Deterministic scripted adapter for tests/examples. |
+| `@aithru/agent-model-openai-compatible` | OpenAI-compatible HTTP adapter for OpenAI-style `/chat/completions` endpoints. |
 
-## State and trace
+`@aithru/agent-model-openai-compatible` does not execute tools. It may emit `tool_call.proposed`; actual tool execution remains the responsibility of `AgentRuntime` and `AgentHost.callTool`.
 
-The Agent layer should not hide what happened inside a single opaque text blob.
+## Agent trace events
 
-It should record:
+`AgentEvent` is the runtime event shape emitted by Agent engines.
 
-- task input;
-- plan;
-- step decisions;
-- model events;
-- tool-call proposals;
-- tool-call results;
-- artifacts;
-- review result;
-- rerun history.
+`AgentTraceEvent` is an additive, provider-neutral trace-consumption view for core integrations and future UI trace viewers. It groups events with stable `kind` and `phase` fields while preserving the full original `AgentEvent` in `payload`.
 
-When possible, these should map to Aithru core events or extension events that remain compatible with the trace viewer.
+`@aithru/node-agent` currently emits core `log.info` events with `AgentTraceEvent` payload and metadata:
 
-## Initial package proposal
+- `agentEventType`;
+- `agentTraceKind`;
+- `agentTracePhase`.
 
-```txt
-aithru-agent/
-  packages/
-    agent-core/        Agent contracts, event types, run options
-    agent-runtime/     plan/run/review runtime
-    agent-node/        workflow node definitions
-    model-openai/      optional provider adapter
-    model-test/        deterministic scripted/test adapter
-  examples/
-    plan-run-review.ts
-    agent-node-workflow.json
-```
+This avoids requiring Aithru Core to support dynamic `agent.*` core event types while still giving future trace viewers stable filter fields.
 
-For the first version, prefer a small deterministic test adapter plus one real provider adapter.
+## Non-goals / not implemented
 
-## Non-goals for the first version
+Current `aithru-agent` does not implement MCP integration, built-in retrieval/tool packages, durable persistence, long-term memory, UI/chat, server workers, LangGraph adapter, or OpenAI Agents SDK adapter.
 
-- No visual workflow builder.
-- No formal `WorkflowSpec` replacement.
-- No workflow scheduler replacement.
-- No server worker pool.
-- No durable distributed queue.
-- No MCP transport management unless delegated to a separate MCP package.
-- No direct filesystem, shell, browser, or GitHub access outside the core tool permission system.
+Those should remain optional modules or future packages rather than entering the core Agent runtime by default.
