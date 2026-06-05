@@ -47,6 +47,7 @@ aithru-personal-bridge or aithru-server executes WorkflowSpec.
 9. [Development Workflow](./docs/08-development-workflow.md)
 10. [Core and Agent Boundary](./docs/09-core-agent-boundary.md)
 11. [Aithru Personal Bridge](./docs/10-aithru-personal-bridge.md)
+12. [Frontend Constraints](./docs/11-frontend-constraints.md)
 
 Architecture decisions:
 
