@@ -1,6 +1,6 @@
 # Runtime, Trace, Approval, Tooling
 
-This document summarizes the execution model shared by current `aithru-core` and future optional modules.
+This document summarizes the execution model shared by current `aithru-core`, `aithru-agent`, `aithru-personal-bridge`, and future optional modules.
 
 ## Runtime model
 
@@ -20,6 +20,8 @@ WorkflowSpec
 `@aithru/runtime-local` is the current local single-process runtime adapter. It schedules validated workflows and delegates concrete actions to injected tool executors.
 
 `aithru-personal-bridge` owns the first cross-process personal execution host around this runtime. It can run on the same machine as the browser or on a private personal server, but it is still personal/single-user by default. Durable multi-user workers belong to future `aithru-server`.
+
+`@aithru/agent-runtime` is not a workflow runtime. It runs bounded Agent tasks through engines such as `classify`, `plan-run-review`, and `deep-research`. Those engines can be called standalone or wrapped as workflow nodes through `@aithru/node-agent`.
 
 ## Event and trace model
 
@@ -46,6 +48,24 @@ The local file trace shape is:
 ```
 
 `aithru-personal-bridge` may persist personal run records, local traces, and local artifacts using this shape or a future local storage adapter. `aithru-web` consumes trace data through the Bridge API and must treat traces as read-only display data.
+
+## Agent trace integration
+
+`aithru-agent` emits runtime-level `AgentEvent` values from Agent engines.
+
+`@aithru/agent-core` also defines `AgentTraceEvent`, a provider-neutral trace-consumption view with stable fields:
+
+- `kind`;
+- `phase`;
+- `agentEventType`;
+- optional task, step, tool, artifact, error, and summary fields;
+- `payload`, which preserves the original `AgentEvent`.
+
+`agentTraceEventFromAgentEvent(...)` maps runtime events into this trace view.
+
+`@aithru/node-agent` currently bridges Agent events into core execution events as `log.info` events. The core event payload is the `AgentTraceEvent`, and metadata includes `agentEventType`, `agentTraceKind`, and `agentTracePhase`.
+
+This avoids requiring Aithru Core to support dynamic `agent.*` core event types while still giving future trace viewers stable fields for filtering and display.
 
 ## Redaction model
 
@@ -94,24 +114,28 @@ This model is important because it gives every product surface one consistent pl
 - audit traces;
 - runtime-specific tool execution.
 
-`aithru-personal-bridge` is the right place for personal tool executor registration because it is a trusted Node host. It can register `@aithru/tool-http`, local file helpers, and future optional tool executors while keeping those capabilities out of the browser bundle.
+`aithru-personal-bridge` is the right place for personal tool executor registration because it is a trusted Node host. It can register HTTP, local, search/read, or other optional tool executors while keeping those capabilities out of the browser bundle.
 
 ## Why Agent must use the same tool model
 
 Agent code can produce dynamic tool calls, but those calls should still go through the same tool execution pipeline.
 
-Required direction:
+Required workflow-node direction:
 
 ```txt
-Agent step
-  -> core tool request
-  -> permission policy
-  -> approval if needed
-  -> executor
-  -> trace
+Agent model event
+  -> AgentRuntime
+  -> AgentHost.callTool
+  -> @aithru/node-agent bridge
+  -> NodeExecutionContext.callTool
+  -> ToolPermissionPolicy
+  -> ToolExecutor
+  -> trace events
 ```
 
-This keeps deterministic workflows and Agent workflows compatible with the same inspection, approval, and security surfaces.
+This keeps deterministic workflows and Agent workflows compatible with the same inspection, approval, trace, and redaction surfaces.
+
+Model adapters may propose tool calls, but they must not execute tools. Agent runtime engines and Agent workflow nodes also must not bypass `AgentHost.callTool` or `NodeExecutionContext.callTool`.
 
 ## Future runtime extensions
 
@@ -127,5 +151,6 @@ This keeps deterministic workflows and Agent workflows compatible with the same 
 | Local encrypted credential UX | future `aithru-desktop`; execution-side secret access in `aithru-personal-bridge` |
 | Vault/KMS integration | `aithru-server` |
 | Browser run timeline UI | `aithru-web` or future `aithru-ui` |
-| Agent internal event stream | `aithru-agent`, mapped into core trace concepts |
-| MCP transport lifecycle | `aithru-mcp` |
+| Agent runtime event stream | `aithru-agent` |
+| Agent trace viewer consumption | `aithru-web` / future `aithru-ui` |
+| MCP transport lifecycle | future `aithru-mcp` |
