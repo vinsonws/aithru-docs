@@ -10,7 +10,7 @@ Aithru is a local-first and enterprise-ready AI WorkflowOS. This repository keep
 | --- | --- | --- |
 | `vinsonws/aithru-core` | Deterministic workflow kernel, local runtime adapter, node SDK, primitive nodes, human approval, HTTP node and tool executor, trace, redaction, pause/resume, and generic tool contracts. | Owns formal WorkflowSpec and workflow execution semantics. Does not include real Agent runtime, MCP SDK, UI, server runtime, database/queue adapters, or LLM providers by default. |
 | `vinsonws/aithru-web` | Browser-safe React/Vite workflow authoring and inspection surface for Aithru Core workflows. | Edits and validates `WorkflowSpec`; browser run panel is simulation/inspection only. Real execution belongs to `aithru-personal-bridge` or future `aithru-server`. |
-| `vinsonws/aithru-personal-bridge` | Planned trusted personal execution host for Aithru-Web. | Runs LocalRuntime on localhost or a private personal server such as Mac mini, DGX-like workstation, NAS, or home server. It is single-user/private by default, not an enterprise server. |
+| `vinsonws/aithru-personal-bridge` | Trusted personal execution host for Aithru-Web; runs LocalRuntime on localhost or a private personal server. | Single-user/private by default. Owns real workflow execution, local traces/artifacts, local secrets/config, tool executors, and approval resume; not an enterprise server. |
 | `vinsonws/aithru-docs` | Ecosystem-level architecture, ADRs, specs, roadmaps, and implementation prompts. | Does not replace package READMEs or generated API docs; it explains cross-repo design decisions and long-term direction. |
 
 Core principle:
@@ -21,16 +21,12 @@ Workflow is deterministic. Integrations are nodes or tools.
 
 Core/Agent boundary:
 
-```txt
-aithru-core owns formal workflows.
-aithru-agent owns intelligent execution inside bounded tasks or nodes.
+```txt\NICALLithru-core owns formal workflows.\NICALLithru-agent owns intelligent execution inside bounded tasks or nodes.
 ```
 
 Execution boundary:
 
-```txt
-aithru-web edits and validates WorkflowSpec.
-aithru-personal-bridge or aithru-server executes WorkflowSpec.
+```txt\NICALLithru-web edits and validates WorkflowSpec.\NICALLithru-personal-bridge or aithru-server executes WorkflowSpec.
 ```
 
 ## Start here
