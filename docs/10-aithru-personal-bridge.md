@@ -15,8 +15,7 @@ Aithru has three pieces that should stay separate:
 ```txt
 aithru-web
   browser authoring, validation, trace display, approval UI
-
-aithru-core
+\NICALLithru-core
   WorkflowSpec, LocalRuntime, node/runtime/tool contracts
 
 aithru-personal-bridge
@@ -35,10 +34,23 @@ The browser UI must not execute `LocalRuntime` directly. Aithru-Web already has 
 
 ### Personal-server mode
 
-- Runs on a Mac mini, DGX-like workstation, NAS, home server, or private VPS.
+- Runs on a Mac mini, DGX-like workstation, NAS, home server, or private small server / VPS.
 - Browser may run on another laptop, tablet, or phone.
 - Access should use LAN, Tailscale, VPN, or HTTPS reverse proxy.
 - Still private and single-user by default.
+
+## Runtime-side imports
+
+`aithru-personal-bridge` runs in a trusted Node host rather than in the browser. It is therefore allowed to import runtime-side and Node-only execution packages such as:
+
+- `@aithru/runtime-local`;
+- `@aithru/tool-http`;
+- `@aithru/stdlib/file`;
+- local trace/artifact helpers;
+- local secret/config providers;
+- future optional tool executors.
+
+These packages must stay out of the `aithru-web` browser bundle.
 
 ## Responsibilities
 
@@ -58,6 +70,7 @@ The browser UI must not execute `LocalRuntime` directly. Aithru-Web already has 
 - run event collection;
 - trace event exposure to Aithru-Web;
 - local trace/artifact storage;
+- local secrets and runtime config;
 - human approval resume/rejection;
 - cancellation semantics;
 - local security policy.
