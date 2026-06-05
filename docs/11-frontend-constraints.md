@@ -2,7 +2,7 @@
 
 This document defines common frontend constraints for all Aithru user-facing surfaces.
 
-It is not only an `aithru-web` document. `aithru-web` is one frontend implementation. Future web consoles, admin/workbench UIs, desktop shells, local companion UIs, mobile/PWA surfaces, and reusable UI packages should follow the same product, state, component, security, and execution-boundary rules unless a platform-specific document explicitly overrides them.
+It is not only an `aithru-web` document. `aithru-web` is one frontend implementation. Future web consoles, admin/workbench UIs, desktop shells, local companion UIs, mobile/PWA surfaces, and reusable UI packages should follow the same product, state, component, security, style, technology-stack, and execution-boundary rules unless a platform-specific document explicitly overrides them.
 
 ## One-line definition
 
@@ -22,6 +22,18 @@ These constraints apply to:
 - embedded panels or widgets that expose workflow, run, trace, approval, Agent, tool, or bridge/server state to users.
 
 Package-local install commands, framework-specific examples, native platform setup, and generated API docs stay in implementation repositories.
+
+## Constraint levels
+
+Use these levels when interpreting frontend decisions.
+
+| Level | Meaning |
+| --- | --- |
+| Must | Required across Aithru frontends unless this docs repository is updated first. |
+| Default | Preferred choice for new implementation. Deviations need a short written reason in the target repository. |
+| Decision required | Allowed only after a docs update, ADR, or explicit implementation design note. |
+
+Do not treat this document as loose advice. It is the common frontend baseline for people and coding agents.
 
 ## Shared product posture
 
@@ -114,21 +126,107 @@ Mobile/PWA frontends should expose a capability subset rather than a cramped cop
 - Avoid complex graph editing unless the interaction model is explicitly designed for small screens.
 - Preserve the same execution state vocabulary and approval semantics as other frontends.
 
-## Technical baseline
+## Technology stack constraints
 
-Implementation-specific frameworks belong in implementation repositories, but common frontend rules apply across platforms.
+Implementation-specific details stay in implementation repositories, but the Aithru frontend family should not fragment without a reason.
 
-Cross-frontend rules:
+### Must
 
-- Use typed contracts for workflow, run, trace, approval, tool, Agent, and bridge/server data.
-- Treat API, IPC, and bridge responses as contracts, not ad hoc JSON blobs.
-- Do not introduce a second component system inside the same app without a documented migration plan.
+- Use typed contracts for workflow, run, trace, approval, tool, Agent, workspace, user, and execution-target data.
+- Treat API, IPC, and bridge/server responses as contracts, not ad hoc JSON blobs.
+- Use TypeScript for web apps, desktop webview apps, shared UI packages, shared client packages, and frontend build tooling unless a native platform requires another language.
 - Keep browser-safe shared packages separate from Node/server-only packages.
-- Keep domain concepts portable enough to support future shared `aithru-ui` components.
-- Use TypeScript for web, desktop webview, shared UI, and shared client packages unless a native platform requires another language.
-- If a native platform uses another language, it must still preserve the same domain vocabulary, state model, and execution-boundary semantics.
+- Keep reusable domain components portable enough to support future shared `aithru-ui` packages.
+- Do not introduce a second component system inside the same app without a documented migration plan.
+- Do not introduce another primary frontend framework for core workbench surfaces without updating this docs repository first.
 
-Framework choices such as React/Vite, Next.js, Tauri/Electron, native mobile frameworks, routing libraries, table libraries, and chart libraries should be documented in each implementation repository.
+### Default stack for web and desktop-webview frontends
+
+| Concern | Default choice | Notes |
+| --- | --- | --- |
+| Language | TypeScript | Required for shared web/desktop UI and clients. |
+| UI framework | React | Default for workbench, admin, desktop webview, and reusable UI packages. |
+| Client workbench build | Vite | Default for browser-safe client workbench apps such as `aithru-web`. |
+| Server-backed web app | Next.js | Use when the product needs server-side routing, auth/session integration, or team/admin console behavior. |
+| Styling | Tailwind CSS + CSS variables | Tokens must be centralized. Do not scatter hard-coded colors. |
+| Primitive UI | shadcn/ui + Radix UI | Default for web/desktop webview primitive components. |
+| Icons | lucide-react | Keep icon style consistent across modules. |
+| Forms | React Hook Form + Zod | Non-trivial forms should have schema validation. |
+| Server/bridge state | TanStack Query | Prefer explicit query/mutation hooks over ad hoc component-level fetching. |
+| Tables | TanStack Table | Default for data-heavy lists, admin grids, runs, traces, and audit views. |
+| Workflow graph | React Flow or documented equivalent | Use one graph engine per app; shared graph components should hide engine details. |
+| JSON/code editing | One canonical editor component per app | Monaco or CodeMirror may be chosen per implementation; do not mix casually. |
+| Charts | Recharts by default | Use ECharts only for complex interactive analytics that justify the extra weight. |
+
+### Shared UI package constraints
+
+A future `aithru-ui` package should be:
+
+- React + TypeScript first;
+- framework-neutral within the React ecosystem, meaning it must not require Next.js APIs;
+- styling-token driven;
+- independent of one app shell unless a component is explicitly a shell component;
+- independent of a specific bridge/server implementation;
+- safe to consume from web workbench, admin console, and desktop-webview frontends.
+
+### Decision required
+
+These choices require a docs update, ADR, or explicit implementation design note before adoption in a core Aithru frontend:
+
+- Vue, Svelte, Angular, Solid, or another primary UI framework;
+- Material UI, Ant Design, Chakra UI, Bootstrap, Mantine, or another full component system;
+- CSS-in-JS as the primary styling system;
+- a second table, form, query, graph, or chart library in the same app;
+- a visual design system that does not use the common Aithru tokens;
+- native mobile UI that changes domain vocabulary or execution state semantics;
+- direct API calls from feature components instead of centralized clients/hooks.
+
+## Style system constraints
+
+Aithru should feel like one product family even when it has multiple frontends.
+
+### Visual direction
+
+Default visual posture:
+
+```txt
+clear, calm, technical, trustworthy, dense-enough workbench UI
+```
+
+Use restrained decoration. The product should feel closer to an engineering console or workflow workbench than to a consumer landing page.
+
+### Must
+
+- Use one styling system per app.
+- Centralize product-level tokens for color, typography, spacing, radius, density, shadow/elevation, border, and z-index.
+- Use semantic tokens such as `background`, `foreground`, `muted`, `border`, `accent`, `success`, `warning`, `destructive`, and `ring` instead of feature-specific raw colors.
+- Avoid hard-coded hex colors inside feature components.
+- Avoid inline styles except for measured geometry, graph/canvas positioning, native shell integration, or dynamic values that cannot be represented cleanly in the styling system.
+- Use consistent iconography across modules and frontends.
+- Status must not be communicated by color alone.
+- Do not use animation to hide slow, failed, or uncertain states.
+
+### Default token posture
+
+- Base surfaces should be neutral and low-noise.
+- Accent color should highlight primary actions, active navigation, selected nodes, and important focus states.
+- Success/warning/destructive colors should be reserved for state and risk, not decoration.
+- Borders and subtle backgrounds should separate workbench regions instead of heavy shadows.
+- Radius should be consistent across cards, panels, buttons, dialogs, and inputs.
+- Spacing should follow a predictable scale; avoid arbitrary one-off spacing in feature components.
+- Dense pages should still preserve hierarchy through section headers, grouping, sticky context, and progressive disclosure.
+
+### Tailwind and shadcn rules for web/desktop-webview
+
+For React web and desktop-webview frontends:
+
+- Tailwind CSS is the default styling layer.
+- shadcn/ui + Radix UI are the default primitive component foundation.
+- `components/ui` should be treated as the primitive layer and should stay domain-neutral.
+- Do not create custom primitives that duplicate shadcn/Radix behavior unless the base primitive is insufficient.
+- Do not mix another large component library into the same app for convenience.
+- Prefer variant-driven components over copy-pasted class strings for buttons, badges, cards, alerts, and status indicators.
+- Keep theme tokens in the app-level style/theme files; feature modules should consume tokens, not define them.
 
 ## Shared shell model
 
@@ -233,20 +331,6 @@ Recommended shared components include:
 - `ConfirmDialog`
 
 Do not create one-off status badges, log viewers, approval cards, validation panels, or execution-target indicators per frontend unless there is a documented reason.
-
-## Styling constraints
-
-Style rules should make the UI consistent and easy for people and coding agents to extend.
-
-- Use a single styling system per app.
-- Share product-level tokens for color, spacing, radius, typography, density, and elevation where possible.
-- Avoid hard-coded hex colors inside feature components.
-- Avoid inline styles except for measured geometry, canvas/graph positioning, native shell integration, or dynamic values that cannot be represented cleanly in the styling system.
-- Use consistent iconography across modules and frontends.
-- Keep animation subtle and functional: progress, expansion, focus, transition, or spatial orientation.
-- Do not use animation to hide slow, failed, or uncertain states.
-- Prefer information density suitable for a workbench, but avoid hiding primary actions or status behind hover-only controls.
-- Platform-specific adaptations are allowed, but they should feel like the same product family.
 
 ## State model
 
@@ -376,7 +460,7 @@ Before implementation:
 2. Read this document.
 3. Read the platform-specific frontend document when one exists, such as [Aithru Web](./04-aithru-web.md).
 4. Read the target implementation repository README.
-5. Produce a small implementation plan when the change affects layout, state, API/IPC, execution target, security, or component ownership.
+5. Produce a small implementation plan when the change affects layout, state, API/IPC, execution target, security, styling, technology stack, or component ownership.
 
 During implementation, do not:
 
@@ -389,7 +473,8 @@ During implementation, do not:
 - bypass bridge/server/local-host ownership for real execution;
 - put feature fetching/mutation logic into primitive UI components;
 - copy large feature components instead of extracting shared domain components;
-- make shared components depend on one app shell unless that is the component's explicit purpose.
+- make shared components depend on one app shell unless that is the component's explicit purpose;
+- introduce a non-default styling system, component library, or primary frontend framework without a decision note.
 
 After implementation, check:
 
@@ -399,6 +484,7 @@ After implementation, check:
 - platform-specific import/runtime rules still hold;
 - workflow/run/approval state naming is consistent;
 - execution target identity is visible where real actions occur;
+- chosen stack and styling choices match this document;
 - docs are updated if a cross-frontend boundary changed.
 
 ## PR checklist
@@ -407,6 +493,8 @@ Use this checklist for meaningful frontend changes:
 
 - [ ] Is the target frontend type clear: web, admin/server, desktop/local, mobile/PWA, embedded, or shared UI?
 - [ ] Does the page/surface use the shared shell model or document why it does not?
+- [ ] Does the implementation follow the default stack or document a justified deviation?
+- [ ] Does the implementation use the shared style tokens and one styling system?
 - [ ] Are reusable UI/domain components reused instead of duplicated?
 - [ ] Are loading, empty, error, permission, and unavailable states handled?
 - [ ] Are execution and approval states visible and named consistently?
@@ -420,6 +508,6 @@ Use this checklist for meaningful frontend changes:
 
 ## Non-goals
 
-This document does not choose every package-level frontend library or native platform toolkit.
+This document does not replace implementation repository README files, component stories, generated API docs, platform-specific frontend specs, or visual design specs.
 
-It does not replace implementation repository README files, component stories, generated API docs, platform-specific frontend specs, or visual design specs. It defines the common cross-frontend constraints that keep Aithru user-facing surfaces coherent as the ecosystem grows.
+It defines the common cross-frontend constraints that keep Aithru user-facing surfaces coherent as the ecosystem grows. It intentionally sets default technology and style-system choices for core Aithru frontend work so that future frontends do not fragment accidentally.
