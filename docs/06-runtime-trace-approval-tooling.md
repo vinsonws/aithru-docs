@@ -19,6 +19,8 @@ WorkflowSpec
 
 `@aithru/runtime-local` is the current local single-process runtime adapter. It schedules validated workflows and delegates concrete actions to injected tool executors.
 
+`aithru-personal-bridge` owns the first cross-process personal execution host around this runtime. It can run on the same machine as the browser or on a private personal server, but it is still personal/single-user by default. Durable multi-user workers belong to future `aithru-server`.
+
 ## Event and trace model
 
 Aithru runs should be observable through structured events.
@@ -43,6 +45,8 @@ The local file trace shape is:
       events.jsonl
 ```
 
+`aithru-personal-bridge` may persist personal run records, local traces, and local artifacts using this shape or a future local storage adapter. `aithru-web` consumes trace data through the Bridge API and must treat traces as read-only display data.
+
 ## Redaction model
 
 Runtime return values may remain full fidelity for the immediate caller, while persisted trace records can be redacted before writing.
@@ -50,6 +54,8 @@ Runtime return values may remain full fidelity for the immediate caller, while p
 This allows local or server products to keep useful debugging data without leaking configured sensitive paths into long-lived trace storage.
 
 Future modules should reuse the same redaction policy concepts instead of creating unrelated trace sanitization systems.
+
+In personal-server mode, `aithru-personal-bridge` must assume trace and artifact data may contain sensitive local information. It should keep redaction and retention policy explicit before exposing traces to remote browsers.
 
 ## Pause and approval model
 
@@ -64,7 +70,7 @@ node returns pause
   -> runtime continues or rejects
 ```
 
-Current `aithru-core` supports same-process local resume. Durable cross-process resume belongs to future desktop/server runtime composition.
+Current `aithru-core` supports same-process local resume. Cross-process personal resume belongs to `aithru-personal-bridge`. Durable multi-user resume belongs to future `aithru-server`.
 
 ## Tool execution model
 
@@ -88,6 +94,8 @@ This model is important because it gives every product surface one consistent pl
 - audit traces;
 - runtime-specific tool execution.
 
+`aithru-personal-bridge` is the right place for personal tool executor registration because it is a trusted Node host. It can register `@aithru/tool-http`, local file helpers, and future optional tool executors while keeping those capabilities out of the browser bundle.
+
 ## Why Agent must use the same tool model
 
 Agent code can produce dynamic tool calls, but those calls should still go through the same tool execution pipeline.
@@ -109,9 +117,13 @@ This keeps deterministic workflows and Agent workflows compatible with the same 
 
 | Extension | Owner |
 | --- | --- |
+| Personal execution host | `aithru-personal-bridge` |
+| Personal trace/artifact storage | `aithru-personal-bridge` |
+| Personal-server token/CORS/network policy | `aithru-personal-bridge` |
+| Desktop product embedding and packaging | future `aithru-desktop` |
 | Durable run store | `aithru-server` or product-specific adapter |
 | Postgres-backed trace store | `aithru-server` |
-| Local encrypted credential store | `aithru-desktop` |
+| Local encrypted credential UX | future `aithru-desktop`; execution-side secret access in `aithru-personal-bridge` |
 | Vault/KMS integration | `aithru-server` |
 | Browser run timeline UI | `aithru-web` or future `aithru-ui` |
 | Agent internal event stream | `aithru-agent`, mapped into core trace concepts |
