@@ -2,12 +2,12 @@
 
 This document defines the default visual design direction for Aithru frontends.
 
-It complements [Common Frontend Constraints](./11-frontend-constraints.md). The constraints document defines the frontend stack and style-system rules; this document defines the recommended product look, color palette, tokens, and usage rules.
+It complements [Common Frontend Constraints](./11-frontend-constraints.md). The constraints document defines the frontend stack, surface/chrome modes, and style-system rules; this document defines the recommended product look, color palette, tokens, visual modes, and usage rules.
 
 ## One-line definition
 
 ```txt
-Aithru visual design = Slate-based technical workbench UI with Indigo brand actions and Cyan intelligence highlights
+Aithru visual design = calm technical product family with Slate base surfaces, Indigo brand actions, Cyan intelligence highlights, and mode-aware chrome density
 ```
 
 ## Style name
@@ -18,36 +18,131 @@ Default style name:
 Aithru Slate Intelligence
 ```
 
-This style is intended for workflow authoring, Agent monitoring, run inspection, trace debugging, approval surfaces, and admin/workbench screens.
+This style is the shared visual language for the Aithru frontend family. It is intentionally flexible enough to support workflow authoring, Agent monitoring, run inspection, trace debugging, approval surfaces, admin/workbench screens, local companion UIs, embedded panels, and hosted daily app surfaces.
 
 ## Design posture
 
 Aithru should feel like:
 
 ```txt
-clear, calm, technical, trustworthy, dense-enough workbench UI
+clear, calm, technical, trustworthy product UI; dense where workbench or admin tasks require it
 ```
 
-The product should look closer to an engineering console, workflow workbench, or AI operations dashboard than to a consumer landing page.
+Aithru should not feel like a marketing site, a decorative AI toy, or a generic admin template. Workbench, trace, approval, and admin surfaces may feel closer to an engineering console, workflow workbench, or AI operations dashboard. Hosted daily app surfaces may feel more native and app-like, with platform chrome visually reduced, as long as state, permission, recovery, and boundary clarity are preserved.
 
 Default visual goals:
 
 1. Calm base surfaces for long sessions.
-2. Clear hierarchy for dense workflow and trace information.
+2. Clear hierarchy for dense workflow, trace, admin, and integration information.
 3. Strong but restrained brand color.
 4. Color used primarily for action, state, risk, and execution feedback.
 5. Subtle intelligence/AI feeling without decorative gradients everywhere.
-6. Good light mode for configuration and reading.
+6. Good light mode for configuration, reading, and daily app usage.
 7. Excellent dark mode for logs, traces, consoles, and execution monitoring.
+8. Chrome density that matches the user's task instead of forcing every surface into a console layout.
+
+## Visual modes
+
+Aithru uses one shared visual language with multiple visual modes. A mode changes chrome density, navigation visibility, and page rhythm; it must not change security, permission, execution, approval, or redaction semantics.
+
+### Workbench visual mode
+
+Use for:
+
+- workflow authoring;
+- Agent monitoring;
+- run inspection;
+- trace debugging;
+- approval review;
+- bridge/server connection inspection;
+- developer-facing configuration.
+
+Characteristics:
+
+- visible shell and navigation are acceptable;
+- context panels, activity panels, inspectors, and validation panels are expected;
+- information density can be higher than ordinary SaaS pages;
+- execution target, run status, trace state, and approval boundaries should be prominent;
+- the UI should feel precise, inspectable, and comfortable for long sessions.
+
+### Admin/ops visual mode
+
+Use for:
+
+- organization, member, department, group, and workspace management;
+- RBAC, role assignments, grants, and permission catalogs;
+- application registry, service registry, service policy, queues, and audit;
+- durable server/team operation.
+
+Characteristics:
+
+- persistent admin navigation is allowed;
+- tables, filters, detail drawers, diff/inspect panels, and audit trails are appropriate;
+- permission denied, degraded, and unavailable states should be explicit;
+- destructive and security-sensitive actions should be guarded with confirmations;
+- the UI may look more like a control plane than a daily end-user app.
+
+### Native hosted app visual mode
+
+Use for:
+
+- child apps hosted inside a platform shell;
+- daily user-facing business apps;
+- integration surfaces where the active app should feel like a first-class native app.
+
+Characteristics:
+
+- the active app owns the primary page header, navigation, toolbar, empty states, and page rhythm;
+- platform chrome should be minimal and visually secondary during normal use;
+- app switching, organization/account context, theme, notifications, and admin entry may live in an account drawer, command palette, compact switcher, or other low-noise affordance;
+- platform integration details such as app key, origin, integration mode, token type, message bus, and service target should stay hidden during normal use;
+- those details should become visible in recovery, permission, boundary, or debug/inspector states;
+- the page should not look like an admin console containing an app unless the user intentionally entered an admin or inspector flow.
+
+### Recovery/boundary visual mode
+
+Use for:
+
+- auth expired;
+- permission denied;
+- approval unavailable;
+- bridge/server/local host unavailable;
+- child app offline;
+- origin or integration mismatch;
+- token exchange failure;
+- message bus failure.
+
+Characteristics:
+
+- platform identity, execution target, app identity, and boundary information may become explicit;
+- show enough context to recover safely without exposing secrets;
+- prefer clear recovery actions over generic error toasts;
+- keep raw details inspectable for operators when safe.
+
+### Embedded/compact visual mode
+
+Use for:
+
+- mobile/PWA subsets;
+- embedded approval widgets;
+- compact trace or status panels;
+- reusable UI packages inside another shell.
+
+Characteristics:
+
+- reduce chrome and navigation;
+- preserve state labels, permission clarity, and recovery paths;
+- avoid copying the full desktop workbench into a cramped surface;
+- provide a path to inspect details elsewhere when the compact view summarizes sensitive or complex state.
 
 ## Primary palette
 
 | Role | Color family | Default hex | Usage |
 | --- | --- | --- | --- |
 | Base | Slate | `#f8fafc` / `#020617` | Page backgrounds in light/dark mode. |
-| Surface | White / Slate | `#ffffff` / `#0f172a` | Cards, panels, dialogs, sidebars. |
+| Surface | White / Slate | `#ffffff` / `#0f172a` | Cards, panels, dialogs, sidebars, drawers. |
 | Border | Slate | `#e2e8f0` / `#1e293b` | Region separation and low-noise structure. |
-| Primary | Indigo | `#4f46e5` / `#818cf8` | Main actions, selected navigation, focused workflow nodes. |
+| Primary | Indigo | `#4f46e5` / `#818cf8` | Main actions, selected navigation, focused workflow nodes, platform-level selection. |
 | Intelligence accent | Cyan | `#06b6d4` / `#22d3ee` | Running states, streaming, AI/Agent activity, live trace highlights. |
 | Success | Emerald | `#10b981` / `#34d399` | Completed runs, passing validation, successful actions. |
 | Warning | Amber | `#f59e0b` / `#fbbf24` | Waiting approval, caution, degraded state. |
@@ -66,9 +161,11 @@ Destructive: Rose
 
 Do not use every color as decoration. Color should communicate product meaning.
 
+Hosted daily apps may introduce an app-specific accent only when it maps to semantic tokens and does not replace shared state colors. For example, an app may style its own primary action with an app accent, but failure, warning, success, running, and approval states should still follow the shared state color rules.
+
 ## Light theme tokens
 
-Use light mode for configuration, workflow authoring, admin tables, and general reading.
+Use light mode for configuration, workflow authoring, admin tables, daily hosted apps, and general reading.
 
 ```css
 :root {
@@ -99,11 +196,11 @@ Use light mode for configuration, workflow authoring, admin tables, and general 
 }
 ```
 
-Light mode should avoid a pure-white page background. Use a slightly cool Slate background with white cards so panels remain visible without heavy shadows.
+Light mode should avoid a pure-white page background in workbench and admin surfaces. Hosted app surfaces may use white or near-white app canvases when the active app needs a native product feel, but panels, floating controls, and recovery surfaces should still use shared tokens.
 
 ## Dark theme tokens
 
-Use dark mode for trace inspection, run consoles, long monitoring sessions, and developer-focused screens.
+Use dark mode for trace inspection, run consoles, long monitoring sessions, and developer-focused screens. Other surfaces should still remain usable in dark mode when the product supports theme switching.
 
 ```css
 .dark {
@@ -178,10 +275,11 @@ Do not scatter raw color classes such as `text-blue-500`, `bg-red-100`, or hard-
 
 ### Page background
 
-- Use `background` for the full page.
-- Avoid pure white in light mode page backgrounds.
+- Use `background` for full-page workbench, admin, trace, and recovery surfaces.
+- Avoid pure white in light mode workbench/admin page backgrounds.
 - Avoid pure black in dark mode page backgrounds.
 - Keep the page calm enough for long-running trace and workflow sessions.
+- Hosted app canvases may use lighter native-app backgrounds when the active app owns the main experience.
 
 ### Cards and panels
 
@@ -189,14 +287,16 @@ Do not scatter raw color classes such as `text-blue-500`, `bg-red-100`, or hard-
 - Prefer thin borders over heavy shadows.
 - Use subtle background changes to separate regions.
 - Keep radius consistent across cards, buttons, dialogs, inputs, and panels.
-- Use shadow sparingly, mostly for floating panels, dialogs, menus, and overlays.
+- Use shadow sparingly, mostly for floating panels, dialogs, menus, drawers, and overlays.
+- In native hosted app mode, avoid wrapping the entire child app in a heavy card or obvious container unless it is a recovery or inspector state.
 
 ### Navigation
 
-- Active navigation should use Primary/Indigo.
+- Active workbench/admin navigation should use Primary/Indigo.
 - Secondary navigation should use muted foreground and border contrast.
 - Avoid decorative gradients in navigation.
 - Workspace, project, profile, and execution target should remain visible in workbench shells.
+- In native hosted app mode, platform navigation may collapse into a command palette, app switcher, account drawer, or compact affordance so the active app can feel native.
 
 ### Typography
 
@@ -212,12 +312,15 @@ Rules:
 - Use normal font weight for dense data.
 - Use medium/semi-bold for headings, labels, and active states.
 - Avoid oversized marketing-style headings inside workbench pages.
-- Use monospace for run IDs, node IDs, trace event IDs, logs, JSON, and code snippets.
+- Hosted app surfaces may use more spacious product-style headings when the page is not a dense workbench or admin surface.
+- Use monospace for run IDs, node IDs, trace event IDs, logs, JSON, code snippets, app keys, service IDs, and token/debug identifiers.
 
 ### Density
 
-Aithru is a workbench, so it should be denser than a marketing site but not cramped.
+Aithru density should match the visual mode.
 
+- Workbench and admin/ops surfaces should be denser than a marketing site but not cramped.
+- Hosted app surfaces may use a lighter, more native app rhythm for ordinary user tasks.
 - Prefer compact controls in tables, traces, logs, and side panels.
 - Preserve readable spacing in forms and approval decisions.
 - Use grouping, sticky headers, panels, and progressive disclosure to manage dense screens.
@@ -291,6 +394,20 @@ Approval surfaces should look trustworthy and explicit.
 - Primary approval action should be visually clear, but not dangerously easy to click by accident.
 - Reject/cancel actions should be visually distinct from destructive system actions.
 
+## Hosted app visual design
+
+Hosted app surfaces are allowed to feel less like a platform shell and more like native applications, but they still live inside Aithru's identity, authorization, trace, redaction, and recovery boundary.
+
+Rules:
+
+- Do not show a permanent admin sidebar in ordinary hosted-app pages.
+- Do not make the hosting platform chrome visually dominate the child app during normal use.
+- Do not surround the child app with a heavy iframe-looking frame unless the surface is in recovery, boundary, or inspector mode.
+- The active app may own its own logo, header, navigation, toolbar, and empty states.
+- Platform app switching, organization switching, account settings, theme, and admin entry should remain reachable through low-noise controls.
+- Permission denied, auth expired, app offline, origin mismatch, and token exchange failure states should reveal enough platform context to recover.
+- Secrets, refresh tokens, service client secrets, bearer tokens, and sensitive trace values must remain redacted.
+
 ## Recommended component variants
 
 Primitive and common components should expose variants rather than requiring pages to assemble raw Tailwind class strings.
@@ -302,7 +419,7 @@ Button: primary, secondary, outline, ghost, destructive
 Badge: neutral, primary, accent, success, warning, destructive
 Card: default, muted, elevated, selected, interactive
 Alert: info, success, warning, destructive
-Panel: default, sidebar, activity, floating
+Panel: default, sidebar, activity, floating, inspector
 StatusBadge: idle, queued, running, waiting_approval, success, failed, cancelled, timeout, degraded, offline
 ```
 
@@ -319,6 +436,8 @@ Avoid these directions unless a specific product surface justifies them:
 - colorful graph nodes by default;
 - large shadows on every card;
 - marketing landing-page spacing in dense workbench screens;
+- permanent admin-console chrome around ordinary hosted app pages;
+- iframe-looking borders around hosted apps during normal use;
 - using red/orange/yellow for decoration instead of state;
 - mixing Ant Design, Material UI, Chakra, or another full component library into the same app;
 - making dark mode the only polished mode.
@@ -329,24 +448,26 @@ The default is Aithru Slate Intelligence. These alternatives are allowed only wi
 
 | Palette | Colors | When to use | Risk |
 | --- | --- | --- | --- |
-| Slate + Indigo + Cyan | Current default | Main workbench, Agent, workflow, trace. | Lowest risk. |
+| Slate + Indigo + Cyan | Current default | Main workbench, Agent, workflow, trace, admin/ops, and shared platform chrome. | Lowest risk. |
 | Zinc + Blue + Emerald | More traditional SaaS | Admin-heavy surfaces where familiarity matters. | Less brand recognition. |
-| Neutral + Violet + Sky | More AI-product feeling | Lighter assistant/Agent-focused surfaces. | Can become decorative or trendy. |
+| Neutral + Violet + Sky | More AI-product feeling | Lighter assistant/Agent-focused or hosted-app surfaces. | Can become decorative or trendy. |
 
-If there is no strong reason, use the default palette.
+If there is no strong reason, use the default palette. App-specific accents are allowed only as semantic token extensions with a short design note.
 
 ## Implementation checklist
 
 Before a frontend style implementation is accepted, check:
 
 - [ ] Uses Aithru Slate Intelligence as the default palette.
+- [ ] Declares the visual mode for meaningful surface-level work: workbench, admin/ops, native hosted app, recovery/boundary, or embedded/compact.
 - [ ] Defines light and dark theme tokens.
 - [ ] Maps Tailwind to semantic CSS variables.
 - [ ] Avoids hard-coded feature-level hex colors.
-- [ ] Uses Indigo for primary actions and selection.
+- [ ] Uses Indigo for platform-level primary actions and selection.
 - [ ] Uses Cyan for running/AI/live activity.
 - [ ] Uses Emerald/Amber/Rose only for semantic state.
 - [ ] Uses thin borders and subtle surfaces instead of heavy shadows.
 - [ ] Keeps graph color primarily tied to selection, validation, and execution state.
 - [ ] Provides readable trace/log/console views.
 - [ ] Keeps both light and dark modes polished.
+- [ ] Avoids making daily hosted app pages look like admin consoles unless the user is in admin, recovery, or inspector mode.
