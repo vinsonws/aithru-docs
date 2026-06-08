@@ -2,12 +2,12 @@
 
 This document defines common frontend constraints for all Aithru user-facing surfaces.
 
-It is not only an `aithru-web` document. `aithru-web` is one frontend implementation. Future web consoles, admin/workbench UIs, desktop shells, local companion UIs, mobile/PWA surfaces, and reusable UI packages should follow the same product, state, component, security, style, technology-stack, and execution-boundary rules unless a platform-specific document explicitly overrides them.
+It is not only an `aithru-web` document. `aithru-web` is one frontend implementation. Future web consoles, admin/workbench UIs, desktop shells, local companion UIs, mobile/PWA surfaces, hosted-app shells, embedded panels, and reusable UI packages should follow the same product, state, component, security, style, technology-stack, and execution-boundary rules unless a platform-specific document explicitly overrides them.
 
 ## One-line definition
 
 ```txt
-Aithru frontend = user-facing workbench surfaces for authoring, configuring, inspecting, approving, and monitoring Aithru workflows, agents, runs, tools, and integrations
+Aithru frontend = user-facing product surfaces for authoring, configuring, hosting, inspecting, approving, and monitoring Aithru workflows, agents, runs, tools, integrations, and platform-hosted apps
 ```
 
 ## Scope
@@ -17,6 +17,7 @@ These constraints apply to:
 - `aithru-web`;
 - future reusable `aithru-ui` packages;
 - future `aithru-server` admin or team workbench UIs;
+- future platform shells that host child applications or integration surfaces;
 - future desktop or local companion UIs for personal execution;
 - future mobile or PWA surfaces that expose a subset of Aithru capabilities;
 - embedded panels or widgets that expose workflow, run, trace, approval, Agent, tool, or bridge/server state to users.
@@ -37,7 +38,7 @@ Do not treat this document as loose advice. It is the common frontend baseline f
 
 ## Shared product posture
 
-Aithru frontend surfaces are workbench products, not marketing pages.
+Aithru frontend surfaces are product and work surfaces, not marketing pages.
 
 Default UI priorities:
 
@@ -48,6 +49,7 @@ Default UI priorities:
 5. Make traces inspectable and auditable.
 6. Keep long-running work comfortable to monitor.
 7. Keep platform differences predictable rather than visually or behaviorally fragmented.
+8. Keep host/platform chrome proportional to the user's current task.
 
 The UI should favor clarity, consistency, recoverability, and trust over decorative effects.
 
@@ -59,11 +61,31 @@ Aithru may have multiple frontends with different capabilities.
 | --- | --- | --- |
 | Web workbench | Author workflows, inspect runs, connect to bridge/server. | Browser-safe, clear mock-vs-real execution boundary. |
 | Server/admin console | Manage team workspaces, users, runs, audit, connectors, and durable execution. | Strong RBAC, audit, pagination, filtering, and operational clarity. |
+| Hosted app shell | Host child apps or integration surfaces inside a shared identity, authorization, theme, and audit boundary. | The active app may own the primary page chrome while platform controls stay available and recoverable. |
 | Desktop/local companion | Provide a trusted local UI around a personal bridge or local host. | UI and execution host may ship together, but boundaries must remain explicit. |
 | Mobile/PWA surface | Monitor runs, approve tasks, review alerts, perform lightweight edits. | Prefer focused workflows over full authoring complexity. |
 | Embedded UI package | Reusable workflow, node, trace, or approval components. | Domain components must be portable and not assume one app shell. |
 
 A new frontend should declare which type it is, which capabilities it supports, and which execution owner it talks to.
+
+## Surface and chrome modes
+
+Aithru frontends should choose a chrome mode according to the user's task. This prevents every surface from becoming a dense console while preserving the same security, state, and execution-boundary semantics.
+
+| Mode | Typical surfaces | Rule |
+| --- | --- | --- |
+| Workbench mode | Workflow authoring, Agent inspection, run console, trace viewer. | Shared shell, navigation, context panel, and activity panel may be visible by default. |
+| Admin/ops mode | Users, RBAC, apps, grants, services, audit, queues, server operation. | Dense console UI, tables, filters, sidebars, inspectors, and audit context are appropriate. |
+| Native hosted app mode | Daily user-facing hosted apps or child apps inside a platform shell. | The active app owns the primary page chrome; platform identity, org, app switching, auth, and recovery controls should be available but visually secondary. |
+| Recovery/boundary mode | Auth expired, permission denied, app offline, token exchange failed, bridge/server unreachable. | Platform boundary, execution target, token/app identity, and recovery actions may become explicit and actionable. |
+| Embedded/compact mode | Approval widgets, mobile/PWA subsets, embedded panels, compact inspectors. | Preserve state, permission, and recovery clarity while reducing chrome. |
+
+Rules:
+
+- A surface that deviates from the default workbench shell should declare its chrome mode in an implementation design note, route file, story, or package README.
+- A lighter chrome mode must not hide permission, approval, execution-target, or recovery boundaries when they matter.
+- Admin and debug affordances should not dominate daily hosted-app pages unless the user intentionally enters an admin, recovery, or inspector surface.
+- The same shared state vocabulary, status components, semantic tokens, and typed clients should be reused across modes.
 
 ## Execution ownership boundary
 
@@ -167,7 +189,7 @@ A future `aithru-ui` package should be:
 - styling-token driven;
 - independent of one app shell unless a component is explicitly a shell component;
 - independent of a specific bridge/server implementation;
-- safe to consume from web workbench, admin console, and desktop-webview frontends.
+- safe to consume from web workbench, admin console, hosted app shells, and desktop-webview frontends.
 
 ### Decision required
 
@@ -190,10 +212,10 @@ Aithru should feel like one product family even when it has multiple frontends.
 Default visual posture:
 
 ```txt
-clear, calm, technical, trustworthy, dense-enough workbench UI
+clear, calm, technical, trustworthy product UI; dense where workbench or admin tasks require it
 ```
 
-Use restrained decoration. The product should feel closer to an engineering console or workflow workbench than to a consumer landing page.
+Use restrained decoration. Workbench, run, trace, and admin surfaces should feel closer to an engineering console or workflow workbench than to a consumer landing page. Daily hosted-app surfaces may use lighter chrome when the active app needs to feel native.
 
 ### Must
 
@@ -215,6 +237,7 @@ Use restrained decoration. The product should feel closer to an engineering cons
 - Radius should be consistent across cards, panels, buttons, dialogs, and inputs.
 - Spacing should follow a predictable scale; avoid arbitrary one-off spacing in feature components.
 - Dense pages should still preserve hierarchy through section headers, grouping, sticky context, and progressive disclosure.
+- Lighter chrome surfaces should still expose recoverable paths to app switching, account/org context, and boundary diagnostics.
 
 ### Tailwind and shadcn rules for web/desktop-webview
 
@@ -244,9 +267,11 @@ WorkbenchShell
 Default rules:
 
 - Workflow editing, run inspection, settings, task lists, approvals, and trace views should use the shared shell model.
+- Admin/ops surfaces may use persistent navigation, filters, tables, and inspectors when they improve operational clarity.
+- Native hosted app surfaces may let the active app own primary chrome, but platform context, authorization recovery, and boundary diagnostics must remain accessible.
 - Mobile or embedded surfaces may collapse shell regions, but they should not remove execution context or status clarity.
 - Public docs, auth screens, or simple landing pages may use a lighter shell.
-- The shell should preserve enough context that users know which workflow, workspace, bridge/server target, run, and environment they are looking at.
+- The shell should preserve enough context that users know which workflow, workspace, bridge/server target, run, app, organization, and environment they are looking at when those concepts are relevant.
 - Long-running execution views should not hide status behind transient toast messages only.
 
 ## Page taxonomy
@@ -257,9 +282,10 @@ Use a small set of page types instead of inventing a new layout per feature.
 | --- | --- | --- |
 | Dashboard | Overview of recent workflows, runs, bridge/server status, and important actions. | loading, empty, degraded/offline |
 | List page | Workflows, runs, agents, connectors, tools, approvals, users, or settings records. | loading, empty, error, pagination/filter state |
-| Detail page | Single workflow, run, node, tool, bridge target, user, workspace, or approval item. | loading, not found, permission/availability, error |
+| Detail page | Single workflow, run, node, tool, bridge target, user, workspace, app, or approval item. | loading, not found, permission/availability, error |
 | Editor page | Workflow graph/JSON/form authoring and validation. | dirty, valid, invalid, saving/exporting/importing |
 | Run console | Live or historical execution view. | queued, running, waiting approval, success, failed, cancelled, timeout |
+| Hosted app page | A child app or integration surface hosted inside a shared platform boundary. | loading, ready, permission denied, auth expired, degraded/offline, origin/integration unavailable |
 | Approval surface | Human decision point on desktop, web, mobile, or embedded UI. | pending, accepted, rejected, expired/cancelled, unavailable |
 | Settings page | Local bridge, server, model, tool, permission, account, and UI configuration. | loading, saved, unsaved, validation error |
 | Admin/ops page | Team, RBAC, audit, connector, queue, or server operation. | loading, empty, degraded, permission denied, error |
@@ -300,7 +326,7 @@ Rules:
 - `components/ui` must stay domain-neutral.
 - `components/layout` must not own feature-specific fetching or mutation logic.
 - `components/common` should provide consistent loading, empty, error, and confirmation patterns.
-- `components/domain` may know Aithru concepts such as workflow, run, trace, node, approval, tool, Agent, workspace, and bridge/server target.
+- `components/domain` may know Aithru concepts such as workflow, run, trace, node, approval, tool, Agent, workspace, app, organization, and bridge/server target.
 - `features/*` owns feature-specific composition, state coordination, and screen-level behavior.
 - Route/page/window files should compose features; they should not become large business-logic containers.
 - Reusable components should not assume that the only consumer is `aithru-web`.
@@ -460,7 +486,7 @@ Before implementation:
 2. Read this document.
 3. Read the platform-specific frontend document when one exists, such as [Aithru Web](./04-aithru-web.md).
 4. Read the target implementation repository README.
-5. Produce a small implementation plan when the change affects layout, state, API/IPC, execution target, security, styling, technology stack, or component ownership.
+5. Produce a small implementation plan when the change affects layout, state, API/IPC, execution target, security, styling, technology stack, component ownership, or chrome mode.
 
 During implementation, do not:
 
@@ -474,7 +500,8 @@ During implementation, do not:
 - put feature fetching/mutation logic into primitive UI components;
 - copy large feature components instead of extracting shared domain components;
 - make shared components depend on one app shell unless that is the component's explicit purpose;
-- introduce a non-default styling system, component library, or primary frontend framework without a decision note.
+- introduce a non-default styling system, component library, or primary frontend framework without a decision note;
+- force daily hosted-app surfaces into admin/ops chrome unless the user is intentionally in an admin, recovery, or inspector flow.
 
 After implementation, check:
 
@@ -485,14 +512,16 @@ After implementation, check:
 - workflow/run/approval state naming is consistent;
 - execution target identity is visible where real actions occur;
 - chosen stack and styling choices match this document;
+- the chosen surface/chrome mode is appropriate for the user task;
 - docs are updated if a cross-frontend boundary changed.
 
 ## PR checklist
 
 Use this checklist for meaningful frontend changes:
 
-- [ ] Is the target frontend type clear: web, admin/server, desktop/local, mobile/PWA, embedded, or shared UI?
-- [ ] Does the page/surface use the shared shell model or document why it does not?
+- [ ] Is the target frontend type clear: web, admin/server, hosted app shell, desktop/local, mobile/PWA, embedded, or shared UI?
+- [ ] Is the surface/chrome mode clear: workbench, admin/ops, native hosted app, recovery/boundary, or embedded/compact?
+- [ ] Does the page/surface use the shared shell model when it is workbench-class, or document why a lighter mode is appropriate?
 - [ ] Does the implementation follow the default stack or document a justified deviation?
 - [ ] Does the implementation use the shared style tokens and one styling system?
 - [ ] Are reusable UI/domain components reused instead of duplicated?
