@@ -257,14 +257,36 @@ theme: {
       warning: "var(--warning)",
       destructive: "var(--destructive)",
       ring: "var(--ring)",
+      brand: {
+        from: "var(--brand-from)",
+        to: "var(--brand-to)",
+      },
     },
     borderRadius: {
       lg: "var(--radius)",
       md: "calc(var(--radius) - 2px)",
       sm: "calc(var(--radius) - 4px)",
     },
+    backgroundImage: {
+      "brand-gradient": "linear-gradient(135deg, var(--brand-from), var(--brand-to))",
+    },
+    boxShadow: {
+      card: "var(--shadow-card)",
+      "card-hover": "var(--shadow-card-hover)",
+      hero: "var(--shadow-hero)",
+    },
   },
 }
+```
+
+Frontends should also declare the brand-accent and elevation CSS variables (light and dark) alongside the theme tokens:
+
+```css
+--brand-from: /* Indigo stop */;
+--brand-to: /* Cyan stop */;
+--shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+--shadow-card-hover: 0 4px 12px rgba(15, 23, 42, 0.08);
+--shadow-hero: 0 8px 22px rgba(79, 70, 229, 0.28);
 ```
 
 Feature modules should consume semantic classes such as `bg-background`, `bg-card`, `text-foreground`, `border-border`, `text-muted-foreground`, `bg-primary`, and `text-destructive`.
@@ -289,6 +311,16 @@ Do not scatter raw color classes such as `text-blue-500`, `bg-red-100`, or hard-
 - Keep radius consistent across cards, buttons, dialogs, inputs, and panels.
 - Use shadow sparingly, mostly for floating panels, dialogs, menus, drawers, and overlays.
 - In native hosted app mode, avoid wrapping the entire child app in a heavy card or obvious container unless it is a recovery or inspector state.
+
+### Brand accent gradient and elevation
+
+The Indigo→Cyan brand gradient is the single decorative accent that ties surfaces together. Expose it once as the `brand-gradient` background utility and a `brand-bar` marker utility; never re-type the gradient or hard-code its hex stops in feature components.
+
+- **Brand gradient fill** (`bg-brand-gradient`): reserve for focal surfaces — one hero metric card per stat row, primary CTA buttons on auth surfaces, icon chips. Do not fill every card with it; a row of six gradient cards reads as noise.
+- **Gradient text** (`text-brand-gradient` via `bg-clip-text`): for stat numbers and the platform wordmark. Keep tabular-nums and tight tracking on numeric fills.
+- **Brand bar marker** (`brand-bar`, a thin vertical gradient bar): prefix page and section titles to give dense admin surfaces a consistent visual anchor.
+- **Card elevation**: default cards use the soft `shadow-card`; interactive cards lift on hover to `shadow-card-hover` (`translate-y-0.5`). Hero/gradient cards may use `shadow-hero` (brand-tinted). Thin borders remain the primary region separator; shadows are accents, not structure.
+- **Icon chips**: square `rounded-lg` tinted chips (`bg-primary/10 text-primary`) behind lucide icons in stat cards and quick actions, instead of bare muted icons.
 
 ### Navigation
 
@@ -420,6 +452,7 @@ Badge: neutral, primary, accent, success, warning, destructive
 Card: default, muted, elevated, selected, interactive
 Alert: info, success, warning, destructive
 Panel: default, sidebar, activity, floating, inspector
+StatCard: regular, hero
 StatusBadge: idle, queued, running, waiting_approval, success, failed, cancelled, timeout, degraded, offline
 ```
 
@@ -466,6 +499,10 @@ Before a frontend style implementation is accepted, check:
 - [ ] Uses Indigo for platform-level primary actions and selection.
 - [ ] Uses Cyan for running/AI/live activity.
 - [ ] Uses Emerald/Amber/Rose only for semantic state.
+- [ ] Exposes the Indigo→Cyan brand gradient once as `bg-brand-gradient` / `text-brand-gradient` / `brand-bar` utilities; never re-types the gradient or its hex stops in feature components.
+- [ ] Uses the brand gradient sparingly — at most one hero gradient card per stat row, plus primary CTAs and icon chips.
+- [ ] Uses the `brand-bar` marker to prefix page and section titles on dense admin surfaces.
+- [ ] Uses soft `shadow-card` / `shadow-card-hover` elevation as accents, with thin borders remaining the primary separator.
 - [ ] Uses thin borders and subtle surfaces instead of heavy shadows.
 - [ ] Keeps graph color primarily tied to selection, validation, and execution state.
 - [ ] Provides readable trace/log/console views.
