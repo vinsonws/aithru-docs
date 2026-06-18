@@ -1,45 +1,57 @@
-# ADR-0001: Keep docs as the ecosystem source of truth
+# ADR-0001: Keep docs focused on current cross-repo boundaries
 
 Status: Accepted
 
-Date: 2026-06-04
+Date: 2026-06-18
 
 ## Context
 
-Aithru is now split across multiple repositories. `aithru-core` already contains implementation-level README files and design notes. `aithru-web` contains a browser workflow editor. Future work is expected to add Agent, MCP, desktop, server, and UI modules.
+Aithru is currently implemented across `aithru-platform`, `aithru-flowe`, and
+`aithru-agent`. Earlier docs also described older or speculative owners such as
+`aithru-core`, `aithru-web`, `aithru-workbench`, and
+`aithru-personal-bridge`. Those documents drifted from the active codebase and
+made the docs harder to trust.
 
-Keeping all design decisions only inside implementation repositories would make cross-repo boundaries difficult to maintain.
+Implementation repositories already contain package-level READMEs, API notes,
+run commands, and design details. This repository should explain only the
+cross-repository facts that those READMEs should not duplicate.
 
 ## Decision
 
-Create and maintain `aithru-docs` as the cross-repository source of truth for:
+Maintain `aithru-docs` as a small current-state boundary index for:
 
-- product vision;
-- ecosystem overview;
-- module boundaries;
-- roadmap;
-- architecture decisions;
-- cross-repo development workflow;
-- prompts used by coding agents.
+- active repository roles;
+- dependency direction;
+- platform/runtime/security contracts;
+- shared frontend constraints;
+- ADRs for decisions that affect more than one repository.
 
-Implementation repositories still keep their own README files, package usage guides, and API-specific documentation.
+Do not keep a roadmap in this repository. Do not document a retired repository
+name as a current owner. Do not copy package-level usage details out of the
+implementation repositories.
 
 ## Consequences
 
 Positive:
 
-- Cross-repo design decisions have one stable home.
-- Coding agents can read a smaller, purpose-built documentation hub before editing code.
-- `aithru-core` can stay focused on implementation and package-local docs.
-- Future modules can be added without losing architectural context.
+- The docs are easier to audit against the active repositories.
+- Coding agents can read a short boundary set before editing code.
+- Implementation READMEs remain the authority for package-local commands,
+  endpoints, and examples.
+- Retired designs are less likely to be mistaken for current work.
 
 Tradeoffs:
 
-- Cross-repo changes need an extra documentation step.
-- Docs can drift if implementation changes are not reflected here.
+- Long-term plans need another home when they are needed.
+- Historical rationale is thinner because obsolete documents are removed instead
+  of preserved as active guidance.
 
 ## Follow-up rules
 
-- Any boundary change affecting multiple repositories should update `aithru-docs`.
-- Any implementation change that only affects one package can stay in that package README/API docs.
-- ADRs should be added for decisions that are hard to reverse or affect dependency direction.
+- Any boundary change affecting multiple repositories should update
+  `aithru-docs`.
+- Any implementation change that only affects one repository should stay in that
+  repository README/API docs.
+- ADRs should be added only for decisions that are hard to reverse or affect
+  dependency direction, security, runtime contracts, or shared frontend
+  constraints.
