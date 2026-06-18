@@ -32,14 +32,31 @@ Aithru should not feel like a marketing site, a decorative AI toy, or a generic 
 
 Default visual goals:
 
-1. Calm base surfaces for long sessions.
-2. Clear hierarchy for dense workflow, trace, admin, and integration information.
+1. Calm base surfaces for long sessions — light mode uses a **net-white canvas**, not a greyed one.
+2. Clear hierarchy for dense workflow, trace, admin, and integration information — built from shadows, borders, and brand accents, not from greying the base.
 3. Strong but restrained brand color.
 4. Color used primarily for action, state, risk, and execution feedback.
 5. Subtle intelligence/AI feeling without decorative gradients everywhere.
 6. Good light mode for configuration, reading, and daily app usage.
 7. Excellent dark mode for logs, traces, consoles, and execution monitoring.
 8. Chrome density that matches the user's task instead of forcing every surface into a console layout.
+
+## Canvas and color baseline
+
+The authoritative color baseline across all Aithru frontends:
+
+```txt
+Net-white canvas + warm-grey layering + brand-gradient float accents.
+Hierarchy comes from shadows and borders, never from a greyed base.
+```
+
+- **Net-white canvas.** Light-mode `--background` is pure white `#ffffff` (`0 0% 100%`). The earlier cool-blue near-white (`#f8fafc` / `210 40% 98%`) is retired — its high blue saturation casts a grey haze ("灰蒙蒙") over the whole surface. Cards, dialogs, and the page share the same white; they separate by shadow and border, not by base tint.
+- **Warm-grey neutrals.** Neutral fills (`--muted`) use a low-saturation warm grey `#f7f8f9` (`220 14% 97%`, saturation ≤ 16%). Never use a high-saturation cool-blue grey for large fills — that is the haze.
+- **Brand-gradient float accents.** Color enters only as the Indigo→Cyan brand gradient (logo marks, icon chips, hero cards, hover glows, dialog top-highlight lines) and as state colors. Large base surfaces stay neutral white.
+- **Translucency floor.** Any half-transparent surface layered on the white canvas (top bars, glass pills, overlays) keeps ≥ `/80` opacity. Below that, white shows through grey.
+- **Dark mode unchanged.** The net-white rule is light-mode only. Dark mode keeps deep slate (`#020617`) — no haze there.
+
+When in doubt: make the canvas whiter, not greyer; add a shadow or a border rather than tinting the base.
 
 ## Visual modes
 
@@ -139,8 +156,9 @@ Characteristics:
 
 | Role | Color family | Default hex | Usage |
 | --- | --- | --- | --- |
-| Base | Slate | `#f8fafc` / `#020617` | Page backgrounds in light/dark mode. |
+| Base | White / Slate | `#ffffff` / `#020617` | Page backgrounds in light/dark mode. Light mode uses a net-white canvas; dark mode uses deep slate. |
 | Surface | White / Slate | `#ffffff` / `#0f172a` | Cards, panels, dialogs, sidebars, drawers. |
+| Neutral fill | Warm grey | `#f7f8f9` / `#111827` | Low-saturation warm grey for muted surfaces, inputs, and region separation. Never a high-saturation cool-blue grey. |
 | Border | Slate | `#e2e8f0` / `#1e293b` | Region separation and low-noise structure. |
 | Primary | Indigo | `#4f46e5` / `#818cf8` | Main actions, selected navigation, focused workflow nodes, platform-level selection. |
 | Intelligence accent | Cyan | `#06b6d4` / `#22d3ee` | Running states, streaming, AI/Agent activity, live trace highlights. |
@@ -169,13 +187,13 @@ Use light mode for configuration, workflow authoring, admin tables, daily hosted
 
 ```css
 :root {
-  --background: #f8fafc;
+  --background: #ffffff;
   --foreground: #0f172a;
 
   --card: #ffffff;
   --card-foreground: #0f172a;
 
-  --muted: #f1f5f9;
+  --muted: #f7f8f9;
   --muted-foreground: #64748b;
 
   --border: #e2e8f0;
@@ -196,7 +214,7 @@ Use light mode for configuration, workflow authoring, admin tables, daily hosted
 }
 ```
 
-Light mode should avoid a pure-white page background in workbench and admin surfaces. Hosted app surfaces may use white or near-white app canvases when the active app needs a native product feel, but panels, floating controls, and recovery surfaces should still use shared tokens.
+Light mode uses a **net-white canvas** (`--background: #ffffff`) across workbench, admin, trace, recovery, and hosted-app surfaces. Hierarchy comes from shadows, borders, and the brand gradient — not from greying the base. Avoid the old cool-blue near-white (`#f8fafc` / `210 40% 98%`): its 40% saturation casts a grey haze across the whole surface. Neutral fills use the low-saturation warm grey `--muted: #f7f8f9` (`220 14% 97%`), never a high-saturation cool-blue grey. Half-transparent surfaces (top bars, glass pills) must stay at ≥ `/80` opacity, or they grey out on the white canvas.
 
 ## Dark theme tokens
 
@@ -298,10 +316,11 @@ Do not scatter raw color classes such as `text-blue-500`, `bg-red-100`, or hard-
 ### Page background
 
 - Use `background` for full-page workbench, admin, trace, and recovery surfaces.
-- Avoid pure white in light mode workbench/admin page backgrounds.
-- Avoid pure black in dark mode page backgrounds.
-- Keep the page calm enough for long-running trace and workflow sessions.
-- Hosted app canvases may use lighter native-app backgrounds when the active app owns the main experience.
+- In light mode, use the net-white canvas (`--background: #ffffff`) as the page background across all surfaces. Do not grey the base to create hierarchy — use shadows, borders, and the brand gradient instead.
+- Avoid the old cool-blue near-white (`#f8fafc`) for page backgrounds; it casts a grey haze. Neutral region separation uses the warm-grey `--muted` (`#f7f8f9`), not a darker base.
+- Avoid pure black in dark mode page backgrounds; deep slate (`#020617`) keeps long trace/log sessions comfortable.
+- Half-transparent surfaces (top bars, glass pills, overlays) must stay at ≥ `/80` opacity on the white canvas, or they read as grey.
+- Hosted app canvases inherit the same net-white base so the active app feels native without a greyed wrapper.
 
 ### Cards and panels
 
